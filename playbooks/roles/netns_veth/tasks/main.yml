@@ -1,0 +1,40 @@
+- name: Create namespace {{ netns_veth_namespace }}
+  ansible.builtin.command:
+    cmd: ip netns add {{ netns_veth_namespace }}
+    creates: /run/netns/{{ netns_veth_namespace }}
+
+- name: Check if device exists in namespace | {{ netns_veth_dev ~ '/' ~ netns_veth_namespace }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_veth_namespace }} link show {{ netns_veth_dev }}
+  register: netns_veth_dev_link
+  changed_when: false
+  failed_when: false
+- name: Create veth pair | {{ netns_veth_peer ~ '/' ~ netns_veth_dev ~ '/' ~ netns_veth_namespace }}
+  ansible.builtin.command: >-
+    ip link add {{ netns_veth_peer }} type veth
+    peer name {{ netns_veth_dev }} netns {{ netns_veth_namespace }}
+  when: netns_veth_dev_link.rc != 0
+  changed_when: true
+
+- name: Check if device is up | {{ netns_veth_dev ~ '/' ~ netns_veth_namespace }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_veth_namespace }} link show {{ netns_veth_dev }} up
+  register: netns_veth_dev_up
+  changed_when: false
+- name: Bring device up | {{ netns_veth_dev ~ '/' ~ netns_veth_namespace }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_veth_namespace }} link set {{ netns_veth_dev }} up
+  when: netns_veth_dev_up.stdout == ""
+  changed_when: true
+
+- name: Read IPv4 addresses of device | {{ netns_veth_dev ~ '/' ~ netns_veth_namespace }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_veth_namespace }} -4 -o addr show dev {{ netns_veth_dev }}
+  register: netns_veth_dev_addr
+  changed_when: false
+- name: Assign address | {{ netns_veth_address ~ '/' ~ netns_veth_dev ~ '/' ~ netns_veth_namespace }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_veth_namespace }} addr add {{ netns_veth_address }}
+    dev {{ netns_veth_dev }}
+  when: netns_veth_address not in netns_veth_dev_addr.stdout
+  changed_when: true

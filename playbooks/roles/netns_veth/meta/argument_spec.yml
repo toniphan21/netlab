@@ -1,0 +1,19 @@
+argument_specs:
+  main:
+    short_description: Network namespace with one veth interface
+    options:
+      netns_veth_namespace:
+        type: str
+        required: true
+        description: Namespace name (max 10 chars, so the default peer name fits in 15)
+      netns_veth_address:
+        type: str
+        required: true
+        description: IPv4 address with prefix, e.g. 10.0.0.1/24
+      netns_veth_dev:
+        type: str
+        default: eth0
+        description: Interface name inside the namespace
+      netns_veth_peer:
+        type: str
+        description: Host-side veth name, defaults to veth-<namespace>
