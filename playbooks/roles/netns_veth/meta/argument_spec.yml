@@ -17,3 +17,6 @@ argument_specs:
       netns_veth_peer:
         type: str
         description: Host-side veth name, defaults to veth-<namespace>
+      netns_veth_peer_namespace:
+        type: str
+        description: Namespace for the peer end, defaults to netns_veth_namespace

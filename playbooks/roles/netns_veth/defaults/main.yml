@@ -1,2 +1,3 @@
 netns_veth_dev: eth0
 netns_veth_peer: "veth-{{ netns_veth_namespace }}"
+netns_veth_peer_namespace: "{{ netns_veth_namespace }}"

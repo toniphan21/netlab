@@ -9,10 +9,14 @@
   register: netns_veth_dev_link
   changed_when: false
   failed_when: false
+- name: Create peer namespace | {{ netns_veth_peer_namespace }}
+  ansible.builtin.command:
+    cmd: ip netns add {{ netns_veth_peer_namespace }}
+    creates: /run/netns/{{ netns_veth_peer_namespace }}
 - name: Create veth pair | {{ netns_veth_peer ~ '/' ~ netns_veth_dev ~ '/' ~ netns_veth_namespace }}
   ansible.builtin.command: >-
-    ip link add {{ netns_veth_peer }} type veth
-    peer name {{ netns_veth_dev }} netns {{ netns_veth_namespace }}
+    ip -n {{ netns_veth_namespace }} link add {{ netns_veth_dev }} type veth
+    peer name {{ netns_veth_peer }} netns {{ netns_veth_peer_namespace }}
   when: netns_veth_dev_link.rc != 0
   changed_when: true
 
