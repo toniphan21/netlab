@@ -1,0 +1,37 @@
+- name: Check if port is in namespace | {{ netns_bridge_name ~ '/' ~ netns_bridge_namespace ~ '/' ~ netns_bridge_port }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_bridge_namespace }} link show {{ netns_bridge_port }}
+  register: netns_bridge_port_link
+  changed_when: false
+  failed_when: false
+
+- name: Move port into namespace | {{ netns_bridge_name ~ '/' ~ netns_bridge_namespace ~ '/' ~ netns_bridge_port }}
+  ansible.builtin.command: >-
+    ip link set {{ netns_bridge_port }} netns {{ netns_bridge_namespace }}
+  when: netns_bridge_port_link.rc != 0
+  changed_when: true
+
+- name: Read port details | {{ netns_bridge_name ~ '/' ~ netns_bridge_namespace ~ '/' ~ netns_bridge_port }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_bridge_namespace }} -o link show {{ netns_bridge_port }}
+  register: netns_bridge_port_info
+  changed_when: false
+
+- name: Attach port to bridge | {{ netns_bridge_name ~ '/' ~ netns_bridge_namespace ~ '/' ~ netns_bridge_port }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_bridge_namespace }} link set {{ netns_bridge_port }}
+    master {{ netns_bridge_name }}
+  when: ("master " ~ netns_bridge_name ~ " ") not in netns_bridge_port_info.stdout
+  changed_when: true
+
+- name: Check if port is up | {{ netns_bridge_name ~ '/' ~ netns_bridge_namespace ~ '/' ~ netns_bridge_port }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_bridge_namespace }} link show {{ netns_bridge_port }} up
+  register: netns_bridge_port_up
+  changed_when: false
+
+- name: Bring port up | {{ netns_bridge_name ~ '/' ~ netns_bridge_namespace ~ '/' ~ netns_bridge_port }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_bridge_namespace }} link set {{ netns_bridge_port }} up
+  when: netns_bridge_port_up.stdout == ""
+  changed_when: true

@@ -1,0 +1,15 @@
+argument_specs:
+  main:
+    short_description: Network namespace with a bridge acting as a switch
+    options:
+      netns_bridge_namespace:
+        type: str
+        required: true
+      netns_bridge_name:
+        type: str
+        default: br0
+      netns_bridge_ports:
+        type: list
+        elements: str
+        default: []
+        description: Existing interfaces (on the host or in sw) to plug into the bridge

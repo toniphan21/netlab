@@ -4,10 +4,25 @@
   roles:
     - role: netns_veth
       netns_veth_namespace: red
+      netns_veth_peer: red-sw
+      netns_veth_peer_namespace: sw
       netns_veth_address: 10.0.0.1/24
+
     - role: netns_veth
       netns_veth_namespace: blue
+      netns_veth_peer: blue-sw
+      netns_veth_peer_namespace: sw
       netns_veth_address: 10.0.0.2/24
+
     - role: netns_veth
       netns_veth_namespace: green
+      netns_veth_peer: green-sw
+      netns_veth_peer_namespace: sw
       netns_veth_address: 10.0.0.3/24
+
+    - role: netns_bridge
+      netns_bridge_namespace: sw
+      netns_bridge_ports:
+        - red-sw
+        - blue-sw
+        - green-sw
