@@ -1,0 +1,35 @@
+- name: Clean up
+  tags: [never, arp]
+  block:
+    - name: Flush ARP cache in red
+      ansible.builtin.command: ip -n red neigh flush all
+      changed_when: false
+
+    - name: Start capture in red (background)
+      ansible.builtin.command: >-
+        timeout 10 ip netns exec red
+        tcpdump -i eth0 -n -e -l -c 6 arp or icmp
+      async: 15
+      poll: 0
+      register: arp_demo_capture
+      changed_when: false
+
+    - name: Give tcpdump a moment to start
+      ansible.builtin.pause:
+        seconds: 1
+
+    - name: Ping blue from red
+      ansible.builtin.command: ip netns exec red ping -c 2 10.0.0.2
+      changed_when: false
+
+    - name: Wait for capture to finish
+      ansible.builtin.async_status:
+        jid: "{{ arp_demo_capture.ansible_job_id }}"
+      register: arp_demo_result
+      until: arp_demo_result.finished
+      retries: 15
+      delay: 1
+
+    - name: Show captured packets
+      ansible.builtin.debug:
+        var: arp_demo_result.stdout_lines

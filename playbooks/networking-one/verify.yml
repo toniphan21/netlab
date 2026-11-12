@@ -1,0 +1,38 @@
+- name: Verify
+  tags: [never, verify]
+  block:
+    - name: Verify status
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - ip -n sw -br link
+        - ip -n red -br addr
+        - ip -n blue -br addr
+      register: netlab_status
+      changed_when: false
+    - name: Show status output
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ netlab_status.results }}"
+      loop_control:
+        label: "{{ item.cmd | join(' ') }}"
+
+    - name: Verify ping all ways
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - ip netns exec red   ping -c1 10.0.0.2 # red -> blue
+        - ip netns exec red   ping -c1 10.0.0.3 # red -> green
+        - ip netns exec blue  ping -c1 10.0.0.1 # blue -> red
+        - ip netns exec blue  ping -c1 10.0.0.3 # blue -> green
+        - ip netns exec green ping -c1 10.0.0.1 # green -> red
+        - ip netns exec green ping -c1 10.0.0.2 # green -> blue
+        - ip netns exec red   ping -c1 10.0.0.1 # red -> red (loopback)
+        - ip netns exec blue  ping -c1 10.0.0.2 # blue -> blue (loopback)
+        - ip netns exec green ping -c1 10.0.0.3 # green -> green (loopback)
+      register: netlab_ping
+      changed_when: false
+    - name: Show ping all ways output
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ netlab_ping.results }}"
+      loop_control:
+        label: "{{ item.cmd | join(' ') }}"
