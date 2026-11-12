@@ -3,6 +3,17 @@
     cmd: ip netns add {{ netns_veth_namespace }}
     creates: /run/netns/{{ netns_veth_namespace }}
 
+- name: Check if loopback is up | {{ netns_veth_namespace }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_veth_namespace }} link show lo up
+  register: netns_veth_lo_up
+  changed_when: false
+- name: Bring loopback up | {{ netns_veth_namespace }}
+  ansible.builtin.command: >-
+    ip -n {{ netns_veth_namespace }} link set lo up
+  when: netns_veth_lo_up.stdout == ""
+  changed_when: true
+
 - name: Check if device exists in namespace | {{ netns_veth_dev ~ '/' ~ netns_veth_namespace }}
   ansible.builtin.command: >-
     ip -n {{ netns_veth_namespace }} link show {{ netns_veth_dev }}

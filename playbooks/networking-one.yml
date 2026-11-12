@@ -1,6 +1,15 @@
 - name: Network one topology
   hosts: netlab
   become: true # run as root
+  gather_facts: false
+  pre_tasks:
+    - name: Install network tools
+      ansible.builtin.apt:
+        name:
+          - iputils-ping
+          - tcpdump
+        update_cache: true
+        cache_valid_time: 3600
   roles:
     - role: netns_veth
       netns_veth_namespace: red
@@ -26,3 +35,55 @@
         - red-sw
         - blue-sw
         - green-sw
+
+  post_tasks:
+    - name: Verify status
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - ip -n sw -br link
+        - ip -n red -br addr
+        - ip -n blue -br addr
+      register: netlab_status
+      changed_when: false
+      tags: [never, verify]
+    - name: Show status output
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ netlab_status.results }}"
+      loop_control:
+        label: "{{ item.cmd | join(' ') }}"
+      tags: [never, verify]
+
+    - name: Verify ping all ways
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - ip netns exec red   ping -c4 10.0.0.2 # red -> blue
+        - ip netns exec red   ping -c4 10.0.0.3 # red -> green
+        - ip netns exec blue  ping -c4 10.0.0.1 # blue -> red
+        - ip netns exec blue  ping -c4 10.0.0.3 # blue -> green
+        - ip netns exec green ping -c4 10.0.0.1 # green -> red
+        - ip netns exec green ping -c4 10.0.0.2 # green -> blue
+        - ip netns exec red   ping -c4 10.0.0.1 # red -> red (loopback)
+        - ip netns exec blue  ping -c4 10.0.0.2 # blue -> blue (loopback)
+        - ip netns exec green ping -c4 10.0.0.3 # green -> green (loopback)
+      register: netlab_ping
+      changed_when: false
+      tags: [never, verify]
+    - name: Show ping all ways output
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ netlab_ping.results }}"
+      loop_control:
+        label: "{{ item.cmd | join(' ') }}"
+      tags: [never, verify]
+
+    - name: Clean up
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - ip netns del sw
+        - ip netns del red
+        - ip netns del blue
+        - ip netns del green
+      register: netlab_cleanup
+      changed_when: false
+      tags: [never, clear]
