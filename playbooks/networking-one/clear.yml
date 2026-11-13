@@ -1,12 +1,8 @@
 - name: Clean up
   tags: [never, clear]
   block:
-    - name: Clean up
-      ansible.builtin.command: "{{ item }}"
-      loop:
-        - ip netns del sw
-        - ip netns del red
-        - ip netns del blue
-        - ip netns del green
-      register: netlab_cleanup
-      changed_when: false
+    - name: Delete namespaces
+      ansible.builtin.command:
+        cmd: ip netns del {{ item }}
+        removes: /run/netns/{{ item }}
+      loop: [red, blue, green, sw]

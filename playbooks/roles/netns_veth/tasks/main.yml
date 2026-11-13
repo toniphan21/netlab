@@ -51,5 +51,5 @@
   ansible.builtin.command: >-
     ip -n {{ netns_veth_namespace }} addr add {{ netns_veth_address }}
     dev {{ netns_veth_dev }}
-  when: netns_veth_address not in netns_veth_dev_addr.stdout
+  when: ("inet " ~ netns_veth_address ~ " ") not in netns_veth_dev_addr.stdout
   changed_when: true
