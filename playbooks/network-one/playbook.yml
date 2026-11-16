@@ -38,13 +38,13 @@
 
   post_tasks:
     - name: Verify
-      ansible.builtin.import_tasks: networking-one/verify.yml
+      ansible.builtin.import_tasks: ./verify.yml
       tags: [never, verify]
 
     - name: Clean up
-      ansible.builtin.import_tasks: networking-one/clear.yml
+      ansible.builtin.import_tasks: ./clear.yml
       tags: [never, clear]
 
     - name: ARP
-      ansible.builtin.import_tasks: networking-one/arp.yml
+      ansible.builtin.import_tasks: ./arp.yml
       tags: [never, arp]
