@@ -1,0 +1,10 @@
+- name: Ping | {{ ping_pair.0 ~ ' ' ~ ips[ping_pair.0] ~ ' -> ' ~ ping_pair.1 ~ ' ' ~ ips[ping_pair.1] }}
+  ansible.builtin.command: >-
+    ip netns exec {{ ping_pair.0 }} ping -c1 -W1 {{ ips[ping_pair.1] }}
+  register: netlab_ping
+  changed_when: false
+  ignore_errors: true
+
+- name: Output | {{ ping_pair.0 ~ ' ' ~ ips[ping_pair.0] ~ ' -> ' ~ ping_pair.1 ~ ' ' ~ ips[ping_pair.1] }}
+  ansible.builtin.debug:
+    msg: "{{ ['$ ' ~ netlab_ping.cmd | join(' ')] + netlab_ping.stdout_lines + netlab_ping.stderr_lines }}"

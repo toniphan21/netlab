@@ -1,0 +1,18 @@
+argument_specs:
+  main:
+    short_description: A veth cable between two namespaces (or the host)
+    options:
+      netns_cable_name:
+        type: str
+        required: true
+        description: Name of this end (max 15 chars; max 10 if peer name is defaulted)
+      netns_cable_namespace:
+        type: str
+        default: ""
+        description: Namespace for this end, empty = host
+      netns_cable_peer_name:
+        type: str
+        description: Name of the other end, defaults to <name>-peer
+      netns_cable_peer_namespace:
+        type: str
+        description: Namespace for the other end, defaults to netns_cable_namespace

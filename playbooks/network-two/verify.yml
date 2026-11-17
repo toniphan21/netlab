@@ -1,0 +1,41 @@
+- name: Verify
+  tags: [never, verify]
+  block:
+    - name: Verify status
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - ip -n sw0 -br link
+        - ip -n sw1 -br link
+        - ip -n red -br addr
+        - ip -n blue -br addr
+        - ip -n green -br addr
+        - ip -n yellow -br addr
+      register: netlab_status
+      changed_when: false
+    - name: Show status output
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ netlab_status.results }}"
+      loop_control:
+        label: "{{ item.cmd | join(' ') }}"
+
+    - name: Verify ping all ways
+      ansible.builtin.include_tasks: ../tasks/ping.yml
+      loop:
+        - [red, blue]
+        - [blue, red]
+
+        - [red, green]
+        - [red, yellow]
+        - [blue, green]
+        - [blue, yellow]
+
+        - [green, yellow]
+        - [yellow, green]
+
+        - [green, red]
+        - [green, blue]
+        - [yellow, red]
+        - [yellow, blue]
+      loop_control:
+        loop_var: ping_pair

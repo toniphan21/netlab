@@ -1,0 +1,29 @@
+- name: Check end | {{ netns_cable_name }}
+  ansible.builtin.command: >-
+    {{ netns_cable_ip }} link show {{ netns_cable_name }}
+  register: netns_cable_link
+  changed_when: false
+  failed_when: false
+
+- name: Check peer end | {{ netns_cable_peer_name }}
+  ansible.builtin.command: >-
+    {{ netns_cable_peer_ip }} link show {{ netns_cable_peer_name }}
+  register: netns_cable_peer_link
+  changed_when: false
+  failed_when: false
+
+- name: Refuse half-existing cable | {{ netns_cable_name }}
+  ansible.builtin.fail:
+    msg: >-
+      Only one end exists:
+      {{ netns_cable_name }} is {{ 'present' if netns_cable_link.rc == 0 else 'missing' }},
+      {{ netns_cable_peer_name }} is {{ 'present' if netns_cable_peer_link.rc == 0 else 'missing' }}.
+      An interface with one of these names probably already exists.
+  when: (netns_cable_link.rc == 0) != (netns_cable_peer_link.rc == 0)
+
+- name: Create cable | {{ netns_cable_name }}
+  ansible.builtin.command: >-
+    ip link add {{ netns_cable_name }}{{ netns_cable_netns_arg }}
+    type veth peer name {{ netns_cable_peer_name }}{{ netns_cable_peer_netns_arg }}
+  when: netns_cable_link.rc != 0
+  changed_when: true

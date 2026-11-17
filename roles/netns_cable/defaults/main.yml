@@ -1,0 +1,3 @@
+netns_cable_namespace: ""
+netns_cable_peer_name: "{{ netns_cable_name }}-peer"
+netns_cable_peer_namespace: "{{ netns_cable_namespace }}"

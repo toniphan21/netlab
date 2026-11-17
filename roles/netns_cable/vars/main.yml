@@ -1,0 +1,7 @@
+# "ip" or "ip -n <ns>": for commands that look at one end
+netns_cable_ip: "ip{{ (' -n ' ~ netns_cable_namespace) if netns_cable_namespace else '' }}"
+netns_cable_peer_ip: "ip{{ (' -n ' ~ netns_cable_peer_namespace) if netns_cable_peer_namespace else '' }}"
+
+# "" or " netns <ns>": for placing each end at creation time
+netns_cable_netns_arg: "{{ (' netns ' ~ netns_cable_namespace) if netns_cable_namespace else '' }}"
+netns_cable_peer_netns_arg: "{{ (' netns ' ~ netns_cable_peer_namespace) if netns_cable_peer_namespace else '' }}"
